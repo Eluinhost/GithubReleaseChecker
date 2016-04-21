@@ -1,0 +1,1 @@
+In development library for checking for updated plugins via github releases

@@ -1,0 +1,22 @@
+language: java
+jdk:
+- oraclejdk8
+- oraclejdk7
+- openjdk7
+branches:
+  only:
+  - master
+  - "/^releases\\/.*$/"
+script: mvn test -DfailOnCheckstyleViolation=true
+after_script:
+- |
+  declare exitCode
+  curl -sSL https://raw.githubusercontent.com/alrra/travis-after-all/1.4.4/lib/travis-after-all.js | node
+  exitCode=$?
+  if [ $exitCode -eq 0 ]; then
+      mvn deploy --settings travis-settings.xml
+  fi
+env:
+  global:
+  - secure: Z/M7S6BnGK7s7qylRKIdVTfIU9esjlpeL74NF1mfLGPWioKKbLKxfv9eckFrzdRT3om/D+/3OZyumPUAXVKxrxQKp+h+awlJAp6ClBXz2LqavCmr8N35TLCepHQZCbFE/vOvEVeLzkmxHGqp7EeflakDA3LYRBo7iy2UN+z4jmDzQoOhA5qjHwd+bIHzDymp4WeONt3B9GzPwr7ByoTJ33dtSli6sESJVK38ND32LJxH92oGObL0O82nSByG3gupCsMrY+4nff1spbf7rBOvSYng5zx4UqueMbjR0VprDc1fRvL9OArrbg9dSyhAmDH1d6MeBRyKMlzAv5ec0oEDs1JKeqCSGGOo4VpuuFm6RjTWi7vgwZNVuAKcd4y0xuy9nY22hBTtxC3anA3vIifobWqjQpR2cgvkpJFL92zqKLpavXF4UNT1elSNoA3bZC0ORryFEBQKK+JIXCn33yjzJBv8YNxuVpo/Z4jHZlPKpYz2pTBatthvk9+OD1Yr5rszYQnbyQtU8QmwD4oO5ArABdClopJwbykGIV0VnXkrlC/jRuDV4shmXkJS5guai0/WhmEbxEX2Fo3/VwSCzFzBeSSotR4ERNv6oPFZdEtpE25pMeSCoKliT0eTYbGme5ZUn6ZUzUHi8yqc+pVmkvSwMo8uqhty0eEOQaYL8CKi2Vg=
+  - secure: EkMSqW8xx7krseXh7H4XN/tGOk/r+4LEtbaQMIgNlcBBdV/KyXSs2KDGyeipOSKhd5AV8Zze5n+pKXTNPFPJaNozfzHgg5wvxWoIA2ZRaK1bu8PC3fAV7Iv1w4scgndGHZl/+WrcMyOvnO2i00O5nNI61DK5D3STYvsU1T8/2Z0O6RfxZQUxR879E1y6PCPTsVlu80lshjVXScy5nrK3kYszQ9tKub+jCgF7rYdK9vvbdcHHB1skVxW2KIzJaphY3urtZS+23PSN67ZYo+RBxDYTEIwVKb+bxUWZDYBwh4gWr8+7bRY4LsE/gVxRp+YOpO9l51Ve98Xro6zQjRswn+qcoic3lB9C38OZaGnnmUy/2PZTRzIm+NpEwY50DCCqdgmbqtCoKK+dmlQ3RWDyMctTacaNJ1bG8Nd/WOG2sFt/dnOknTaDutzPTVdLpdlatKx4zeZWU3MV3u+ZUFxQ1NzV5Zz+FAhezwXJFR+FbKYza/XYFvOHCXsT8aw4j74Vf6UVCRmASMzCIxVLk1m+uG7TyTR/cU4X5nLnDEZEehwfJJ+nmVdwq2i3KmiuC1VJsZ06yjuvTfJMopFmS6IhxBnfaJU+luqdOLhZrs0eKn/JCzAq1FkUQxqdneYtG2kLqlvc3c0Xpq7khkQEx4zHtyW7o6u0K50vpZBhukoTWfk=
