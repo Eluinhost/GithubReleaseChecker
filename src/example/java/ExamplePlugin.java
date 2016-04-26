@@ -25,48 +25,91 @@
  * THE SOFTWARE.
  */
 
-import com.google.common.util.concurrent.FutureCallback;
+import com.github.zafarkhaja.semver.Version;
 import gg.uhc.githubreleasechecker.ReleaseChecker;
 import gg.uhc.githubreleasechecker.UpdateResponse;
 import gg.uhc.githubreleasechecker.data.Release;
 import gg.uhc.githubreleasechecker.deserialization.LatestReleaseQueryer;
+import net.md_5.bungee.api.ChatColor;
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.TextComponent;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.IOException;
+
 public class ExamplePlugin extends JavaPlugin {
-
-    protected static final String UPDATE_FORMAT = "An update is available (%s -> %s). Download here: %s";
-
     public void onEnable() {
-        LatestReleaseQueryer queryer = new LatestReleaseQueryer("Eluinhost", "UHC");
+        final LatestReleaseQueryer queryer = new LatestReleaseQueryer("Eluinhost", "UHC");
         final ReleaseChecker checker = new ReleaseChecker(this, queryer, true);
 
-        final UpdateCallback callback = new UpdateCallback();
+        getServer()
+            .getScheduler()
+            .runTaskTimerAsynchronously(this, new UpdateLogger(checker, this), 0, 60 * 60 * 20);
+    }
+}
 
-        getServer().getScheduler().runTaskTimer(this, new Runnable() {
-            @Override
-            public void run() {
-                checker.checkForUpdate(callback);
-            }
-        }, 0, 60 * 60 * 20);
+class UpdateLogger implements Runnable, Listener {
+    protected static final String UPDATE_FORMAT = "An update is available (%s -> %s).";
+
+    protected final ReleaseChecker checker;
+    protected final Plugin plugin;
+
+    protected Version latestUpdate;
+    protected BaseComponent chatMessage;
+
+    UpdateLogger(ReleaseChecker checker, Plugin plugin) {
+        this.checker = checker;
+        this.plugin = plugin;
     }
 
-    protected class UpdateCallback implements FutureCallback<UpdateResponse> {
-        @Override
-        public void onSuccess(UpdateResponse response) {
-            if (response.hasUpdate()) {
-                Release update = response.getUpdateDetails();
-                getLogger().info(String.format(
-                    UPDATE_FORMAT,
-                    response.getInstalled(),
-                    update.getVersion(),
-                    update.getUrl())
-                );
-            }
+    @EventHandler public void on(PlayerJoinEvent event) {
+        if (event.getPlayer().isOp() && chatMessage != null) {
+            event.getPlayer().spigot().sendMessage(chatMessage);
         }
+    }
 
-        @Override
-        public void onFailure(Throwable t) {
-            t.printStackTrace();
+    @Override
+    public void run() {
+        try {
+            final UpdateResponse response = checker.checkForUpdate();
+
+            if (response.hasUpdate()) {
+                final Release update = response.getUpdateDetails();
+
+                if (!update.getVersion().equals(latestUpdate)) {
+                    latestUpdate = update.getVersion();
+
+                    final String base = String.format(
+                        UPDATE_FORMAT,
+                        response.getInstalled().toString(),
+                        update.getVersion().toString()
+                    );
+
+                    plugin.getLogger().info(base + " More info: " + update.getUrl());
+
+                    chatMessage = new TextComponent(base);
+                    chatMessage.setColor(ChatColor.AQUA);
+
+                    TextComponent info = new TextComponent(" Click me for info");
+                    info.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, update.getUrl()));
+                    info.setUnderlined(true);
+                    chatMessage.addExtra(info);
+
+                    for (Player p : plugin.getServer().getOnlinePlayers()) {
+                        if (p.isOp()) {
+                            p.spigot().sendMessage(chatMessage);
+                        }
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

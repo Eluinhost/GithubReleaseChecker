@@ -35,8 +35,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.common.util.concurrent.FutureCallback;
 import org.bukkit.plugin.Plugin;
+
+import java.io.IOException;
 
 public class ReleaseChecker {
     protected final Version installed;
@@ -84,22 +85,13 @@ public class ReleaseChecker {
         return installed;
     }
 
-    public void checkForUpdate(final FutureCallback<UpdateResponse> callback) {
-        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    callback.onSuccess(new UpdateResponse(
-                        installed,
-                        Iterables.tryFind(
-                            ImmutableList.copyOf(queryer.queryReleases()),
-                                isNewerThanInstalled
-                        ).orNull()
-                    ));
-                } catch (Exception ex) {
-                    callback.onFailure(ex);
-                }
-            }
-        });
+    public UpdateResponse checkForUpdate() throws IOException {
+        return new UpdateResponse(
+            installed,
+            Iterables.tryFind(
+                ImmutableList.copyOf(queryer.queryReleases()),
+                isNewerThanInstalled
+            ).orNull()
+        );
     }
 }
