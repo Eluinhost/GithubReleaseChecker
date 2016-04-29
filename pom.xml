@@ -6,7 +6,7 @@
 
     <groupId>gg.uhc</groupId>
     <artifactId>github-release-checker</artifactId>
-    <version>1.0.0</version>
+    <version>1.1.0</version>
 
     <name>GithubReleaseChecker</name>
 
@@ -94,6 +94,28 @@
                 <configuration>
                     <source>7</source>
                     <target>7</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>2.4.3</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <minimizeJar>true</minimizeJar>
+                    <relocations>
+                        <relocation>
+                            <pattern>com.github.zafarkhaja</pattern>
+                            <shadedPattern>gg.uhc.githubreleasechecker.zafarkhaja</shadedPattern>
+                        </relocation>
+                    </relocations>
                 </configuration>
             </plugin>
         </plugins>
