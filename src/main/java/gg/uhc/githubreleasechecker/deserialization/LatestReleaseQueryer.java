@@ -30,13 +30,12 @@ package gg.uhc.githubreleasechecker.deserialization;
 import gg.uhc.githubreleasechecker.data.Release;
 
 import com.github.zafarkhaja.semver.Version;
-import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
-import com.google.common.io.Resources;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -47,9 +46,6 @@ public class LatestReleaseQueryer {
     protected final Gson gson;
 
     public LatestReleaseQueryer(String author, String repo) {
-        Preconditions.checkNotNull(author);
-        Preconditions.checkNotNull(repo);
-
         final GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(Version.class, new VersionDeserializer());
         gson = builder.create();
@@ -62,8 +58,17 @@ public class LatestReleaseQueryer {
     }
 
     public Release[] queryReleases() throws IOException {
-        final String rawJson = Resources.toString(url, Charsets.UTF_8);
+        BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
 
-        return gson.fromJson(rawJson, Release[].class);
+        StringBuilder sb = new StringBuilder();
+
+        String temp;
+        while ((temp = in.readLine()) != null) {
+            sb.append(temp);
+        }
+
+        in.close();
+
+        return gson.fromJson(sb.toString(), Release[].class);
     }
 }

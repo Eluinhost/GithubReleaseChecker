@@ -31,10 +31,6 @@ import gg.uhc.githubreleasechecker.data.Release;
 import gg.uhc.githubreleasechecker.deserialization.LatestReleaseQueryer;
 
 import com.github.zafarkhaja.semver.Version;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import org.bukkit.plugin.Plugin;
 
 import java.io.IOException;
@@ -44,17 +40,6 @@ public class ReleaseChecker {
     protected final boolean allowPrerelease;
     protected final Plugin plugin;
     protected final LatestReleaseQueryer queryer;
-
-    protected final Predicate<Release> isNewerThanInstalled = new Predicate<Release>() {
-        @Override
-        public boolean apply(Release input) {
-            if (input == null || input.getVersion() == null) return false;
-
-            if (!allowPrerelease && input.isPrerelease()) return false;
-
-            return input.getVersion().greaterThan(installed);
-        }
-    };
 
     /**
      * Creates a new release checker for checking for updates
@@ -67,9 +52,6 @@ public class ReleaseChecker {
      * @throws com.github.zafarkhaja.semver.ParseException if provided version number is not valid semver
      */
     public ReleaseChecker(Plugin plugin, LatestReleaseQueryer queryer, boolean allowPrerelease) {
-        Preconditions.checkNotNull(plugin);
-        Preconditions.checkNotNull(queryer);
-
         this.allowPrerelease = allowPrerelease;
         this.plugin = plugin;
         this.queryer = queryer;
@@ -86,12 +68,29 @@ public class ReleaseChecker {
     }
 
     public UpdateResponse checkForUpdate() throws IOException {
+        Release[] releases = queryer.queryReleases();
+        Release potentialUpdate = null;
+        Version updateVersion = installed;
+
+        for (Release release : releases) {
+            if (release == null || (!allowPrerelease && release.isPrerelease()))
+                continue;
+
+            Version version = release.getVersion();
+
+            if (version == null)
+                continue;
+
+            if (version.lessThanOrEqualTo(updateVersion))
+                continue;
+
+            potentialUpdate = release;
+            updateVersion = version;
+        }
+
         return new UpdateResponse(
             installed,
-            Iterables.tryFind(
-                ImmutableList.copyOf(queryer.queryReleases()),
-                isNewerThanInstalled
-            ).orNull()
+            potentialUpdate
         );
     }
 }
