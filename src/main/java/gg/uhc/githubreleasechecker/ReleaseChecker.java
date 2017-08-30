@@ -68,21 +68,24 @@ public class ReleaseChecker {
     }
 
     public UpdateResponse checkForUpdate() throws IOException {
-        Release[] releases = queryer.queryReleases();
+        final Release[] releases = queryer.queryReleases();
         Release potentialUpdate = null;
         Version updateVersion = installed;
 
-        for (Release release : releases) {
-            if (release == null || (!allowPrerelease && release.isPrerelease()))
+        for (final Release release : releases) {
+            if (release == null || (!allowPrerelease && release.isPrerelease())) {
                 continue;
+            }
 
-            Version version = release.getVersion();
+            final Version version = release.getVersion();
 
-            if (version == null)
+            if (version == null) {
                 continue;
+            }
 
-            if (version.lessThanOrEqualTo(updateVersion))
+            if (version.lessThanOrEqualTo(updateVersion)) {
                 continue;
+            }
 
             potentialUpdate = release;
             updateVersion = version;

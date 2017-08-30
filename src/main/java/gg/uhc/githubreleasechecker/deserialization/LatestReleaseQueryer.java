@@ -58,9 +58,9 @@ public class LatestReleaseQueryer {
     }
 
     public Release[] queryReleases() throws IOException {
-        BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
+        final BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
 
-        StringBuilder sb = new StringBuilder();
+        final StringBuilder sb = new StringBuilder();
 
         String temp;
         while ((temp = in.readLine()) != null) {
